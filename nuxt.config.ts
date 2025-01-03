@@ -3,9 +3,24 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
 
+  runtimeConfig: {
+    app: {
+      moviesDatabaseApiKey: process.env.MOVIES_DATABASE_API_KEY,
+      moviesDatabaseAccessToken: process.env.MOVIES_DATABASE_ACCESS_TOKEN,
+      moviesDatabaseUrl: process.env.MOVIES_DATABASE_URL,
+    },
+  },
+
+  tailwindcss: {
+    cssPath: ['~/assets/css/tailwind.css', { injectPosition: 'first' }],
+    configPath: './tailwind.config',
+    exposeConfig: true,
+    viewer: true,
+  },
+
   typescript: {
     typeCheck: true,
   },
 
-  modules: ['@nuxt/eslint', '@nuxt/test-utils/module'],
+  modules: ['@nuxt/eslint', '@nuxt/test-utils/module', '@nuxtjs/tailwindcss'],
 });
