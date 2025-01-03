@@ -1,11 +1,13 @@
+<script lang="ts" setup>
+import BillboardHero from '@/modules/billboard/components/BillboardHero/index.vue';
+</script>
 <template>
   <div>
-    <h1>Hello World</h1>
-    <p>My name is John Cena, tu tu turu tu</p>
+    <BillboardHero />
   </div>
 </template>
 <script lang="ts">
 export default {
-  name: "IndexPage",
+  name: 'IndexPage',
 };
 </script>
