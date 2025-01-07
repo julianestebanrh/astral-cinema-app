@@ -10,10 +10,9 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "postinstall": "nuxt prepare",
-    "lint": "yarn lint:eslint && yarn lint:prettier",
+    "lint": "yarn lint:eslint",
     "lint:eslint": "eslint .",
-    "lint:prettier": "prettier . --check",
-    "lintfix": "eslint . --fix && prettier --write --list-different .",
+    "lintfix": "eslint . --fix",
     "prepare": "husky"
   },
   "dependencies": {
@@ -35,7 +34,6 @@
     "husky": "^9.1.7",
     "jsdom": "^25.0.1",
     "playwright-core": "^1.49.1",
-    "prettier": "3.4.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8",
     "vue-tsc": "^2.2.0"
