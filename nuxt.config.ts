@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-01',
+  compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
 
   runtimeConfig: {
@@ -12,8 +12,8 @@ export default defineNuxtConfig({
   },
 
   tailwindcss: {
-    cssPath: ['~/assets/css/tailwind.css', { injectPosition: 'first' }],
-    configPath: './tailwind.config',
+    cssPath: ["~/assets/css/tailwind.css", { injectPosition: "first" }],
+    configPath: "./tailwind.config",
     exposeConfig: true,
     viewer: true,
   },
@@ -22,5 +22,5 @@ export default defineNuxtConfig({
     typeCheck: true,
   },
 
-  modules: ['@nuxt/eslint', '@nuxt/test-utils/module', '@nuxtjs/tailwindcss'],
+  modules: ["@nuxt/eslint", "@nuxt/test-utils/module", "@nuxtjs/tailwindcss"],
 });
