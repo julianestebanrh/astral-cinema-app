@@ -23,4 +23,11 @@ export default defineNuxtConfig({
   },
 
   modules: ["@nuxt/eslint", "@nuxt/test-utils/module", "@nuxtjs/tailwindcss"],
+
+  nitro: {
+    ignore: [
+      "**/api/**/__tests__/**",
+      "**/api/**/__tests__/**",
+    ]
+  }
 });
