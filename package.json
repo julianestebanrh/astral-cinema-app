@@ -16,9 +16,11 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.2.0",
     "@nuxt/eslint": "0.7.4",
     "@nuxtjs/tailwindcss": "6.12.2",
     "eslint": "^8.57.0 || ^9.0.0",
+    "motion": "^11.16.1",
     "nuxt": "^3.15.0",
     "ts-case-convert": "^2.1.0",
     "vue": "latest",
