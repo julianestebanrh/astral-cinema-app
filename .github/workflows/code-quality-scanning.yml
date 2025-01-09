@@ -26,9 +26,11 @@ jobs:
           yarn
 
       - name: Run linter & Tests Coverage
+        id: linter-and-test
         run: yarn lint && yarn test:coverage
       
       - name: SonarQube Scan
+        if: ${{ steps.linter-and-test.outcome == 'success' }}
         uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}

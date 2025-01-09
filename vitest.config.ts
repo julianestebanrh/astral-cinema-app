@@ -17,7 +17,7 @@ export default defineVitestConfig({
     exclude: filesToExclude,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov'],
       all: true,
       exclude: filesToExclude,
     },
