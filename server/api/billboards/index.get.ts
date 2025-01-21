@@ -8,21 +8,21 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
 
   const { results } = await $fetch<ITMDBNowPlayingApiResponse>(
-    `${config.app.moviesDatabaseUrl}/movie/now_playing`,
+    `${config.moviesDatabaseUrl}/movie/now_playing`,
     {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${config.app.moviesDatabaseAccessToken}`,
+        Authorization: `Bearer ${config.moviesDatabaseAccessToken}`,
       },
     },
   );
 
   const { genres } = await $fetch<ITMDBGenresApiResponse>(
-    `${config.app.moviesDatabaseUrl}/genre/movie/list`,
+    `${config.moviesDatabaseUrl}/genre/movie/list`,
     {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${config.app.moviesDatabaseAccessToken}`,
+        Authorization: `Bearer ${config.moviesDatabaseAccessToken}`,
       },
     },
   );

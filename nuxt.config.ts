@@ -4,11 +4,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   runtimeConfig: {
-    app: {
-      moviesDatabaseApiKey: process.env.MOVIES_DATABASE_API_KEY,
-      moviesDatabaseAccessToken: process.env.MOVIES_DATABASE_ACCESS_TOKEN,
-      moviesDatabaseUrl: process.env.MOVIES_DATABASE_URL,
-    },
+    moviesDatabaseApiKey: process.env.MOVIES_DATABASE_API_KEY,
+    moviesDatabaseAccessToken: process.env.MOVIES_DATABASE_ACCESS_TOKEN,
+    moviesDatabaseUrl: process.env.MOVIES_DATABASE_URL,
   },
 
   tailwindcss: {
