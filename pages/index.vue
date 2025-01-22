@@ -1,9 +1,19 @@
 <script lang="ts" setup>
-import BillboardHero from '@/modules/billboard/components/BillboardHero/index.vue';
+import IndexPage from '@/modules/billboard/pages/IndexPage/index.vue';
+
+useHead({
+  title: 'Watch on Astral Now!',
+  meta: [
+    {
+      name: 'description',
+      content: 'Watch on Astral Cinema Now! Book your tickets now!',
+    }
+  ]
+})
 </script>
 <template>
   <div>
-    <BillboardHero />
+    <IndexPage />
   </div>
 </template>
 <script lang="ts">
