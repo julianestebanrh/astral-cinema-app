@@ -25,3 +25,11 @@ logs
 
 # Test files
 coverage
+
+# Terraform files
+**/.terraform
+**/.terraform.*
+**/*.zip
+
+.yarnrc.yml
+.yarn
