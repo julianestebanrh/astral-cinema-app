@@ -1,0 +1,114 @@
+name: Rollback Lambda Function and Static Assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Lambda version to rollback to'
+        required: true
+      environment:
+        description: 'Environment to rollback (dev, staging, prod)'
+        required: true
+        default: 'dev'
+
+env:
+  AWS_REGION: us-east-1
+  APP_NAME: astral-cinema-app
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Set environment variables
+        id: env
+        run: |
+          echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          echo "BUCKET_NAME=${{ env.APP_NAME }}-${{ github.event.inputs.environment }}-static-assets" >> $GITHUB_ENV
+          echo "LAMBDA_FUNCTION_NAME=${{ env.APP_NAME }}-${{ github.event.inputs.environment }}-ssr-function" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Validate version input
+        id: validate-version
+        run: |
+          if ! aws lambda get-function \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }}:${{ github.event.inputs.version }} \
+            --query 'Configuration.Version' \
+            --output text; then
+            echo "::error::Invalid version: ${{ github.event.inputs.version }}"
+            exit 1
+          fi
+
+      - name: Rollback Lambda function
+        run: |
+          aws lambda update-alias \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --name production \
+            --function-version ${{ github.event.inputs.version }}
+
+      - name: Rollback static assets in S3
+        run: |
+          aws s3 sync \
+            s3://${{ env.BUCKET_NAME }}/versions/${{ github.event.inputs.version }}/static \
+            s3://${{ env.BUCKET_NAME }}/static \
+            --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?contains(Aliases.Items, '${{ env.BUCKET_NAME }}.s3.${{ env.AWS_REGION }}.amazonaws.com')].Id" \
+            --output text)
+          aws cloudfront create-invalidation \
+            --distribution-id $DISTRIBUTION_ID \
+            --paths "/*"
+
+      - name: Get current (damaged) version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(aws lambda list-aliases \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --query "Aliases[?Name=='production'].FunctionVersion" \
+            --output text)
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+
+      - name: Delete versions newer than rollback version
+        run: |
+          echo "Eliminando versiones posteriores a ${{ github.event.inputs.version }}..."
+          VERSIONS=$(aws lambda list-versions-by-function \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --query 'Versions[?Version!=`$LATEST`].Version' \
+            --output text)
+
+          for V in $VERSIONS; do
+            if [ "$V" -gt "${{ github.event.inputs.version }}" ]; then
+              echo "Eliminando versión $V de Lambda..."
+              aws lambda delete-function \
+                --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+                --qualifier $V
+a
+              echo "Eliminando versión $V de S3..."
+              aws s3 rm \
+                s3://${{ env.BUCKET_NAME }}/versions/$V/static \
+                --recursive
+            fi
+          done
+
+      - name: Notify rollback success
+        if: success()
+        run: |
+          echo "✅ Rollback to version ${{ github.event.inputs.version }} completed in ${{ env.ENVIRONMENT }} environment"
+          echo "🔄 Static assets reverted to version ${{ github.event.inputs.version }}"
+          echo "🗑️ Versiones posteriores a ${{ github.event.inputs.version }} eliminadas."
+
+      - name: Notify rollback failure
+        if: failure()
+        run: |
+          echo "❌ Rollback failed for version ${{ github.event.inputs.version }} in ${{ env.ENVIRONMENT }} environment"

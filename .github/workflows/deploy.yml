@@ -1,0 +1,199 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  code-quality-scanning:
+    name: Code Quality Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      # Cache de dependencias de Yarn
+      - name: Cache Yarn dependencies
+        id: yarn-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/yarn
+          key: yarn-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          npm i -g yarn
+          yarn
+
+      - name: Run linter & Tests Coverage
+        id: linter-and-test
+        run: yarn lint && yarn test:coverage
+
+      - name: SonarQube Scan
+        if: ${{ steps.linter-and-test.outcome == 'success' }}
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+
+  deploy:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: code-quality-scanning  # Depende del job code-quality-scanning
+    if: |
+      contains(github.event.head_commit.message, '[deploy:dev]') ||
+      contains(github.event.head_commit.message, '[deploy:staging]') ||
+      contains(github.event.head_commit.message, '[deploy:prod]')
+    permissions:
+      id-token: write
+      contents: write  # Permiso para crear tags y releases
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set environment based on commit message
+        id: env
+        run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          if [[ "$COMMIT_MESSAGE" == *"[deploy:prod]"* ]]; then
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          elif [[ "$COMMIT_MESSAGE" == *"[deploy:staging]"* ]]; then
+            echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+          fi
+          echo "BUCKET_NAME=${{ env.APP_NAME }}-${{ env.ENVIRONMENT }}-static-assets" >> $GITHUB_ENV
+          echo "LAMBDA_FUNCTION_NAME=${{ env.APP_NAME }}-${{ env.ENVIRONMENT }}-ssr-function" >> $GITHUB_ENV
+          echo "API_GATEWAY_NAME=${{ env.APP_NAME }}-${{ env.ENVIRONMENT }}-ssr-api" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      # Cache de dependencias de Yarn
+      - name: Cache Yarn dependencies
+        id: yarn-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/yarn
+          key: yarn-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          npm i -g yarn
+          yarn
+
+      - name: Build application
+        run: yarn build:lambda
+
+      - name: Deploy static assets to S3
+        run: |
+          aws s3 sync .output/public s3://${{ env.BUCKET_NAME }}/static --delete
+
+      - name: Create Lambda deployment package
+        run: |
+          cd .output/server
+          zip -r ../../lambda-server.zip .
+          cd ../..
+
+      - name: Get commit info
+        id: commit
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+
+      - name: Update Lambda function and publish version
+        id: lambda_update
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --zip-file fileb://lambda-server.zip \
+            --publish \
+            --output json > lambda_version.json
+
+          VERSION=$(jq -r '.Version' lambda_version.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          aws lambda tag-resource \
+            --resource $(jq -r '.FunctionArn' lambda_version.json) \
+            --tags \
+            commit=${{ steps.commit.outputs.sha_short }},\
+            commit_message="${{ steps.commit.outputs.commit_message }}",\
+            deployed_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+
+      - name: Backup static assets to versioned folder
+        run: |
+          VERSION=${{ steps.lambda_update.outputs.version }}
+          aws s3 sync \
+            s3://${{ env.BUCKET_NAME }}/static \
+            s3://${{ env.BUCKET_NAME }}/versions/$VERSION/static
+
+      - name: Update Lambda alias
+        run: |
+          aws lambda update-alias \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --name production \
+            --function-version ${{ steps.lambda_update.outputs.version }} \
+            || aws lambda create-alias \
+               --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+               --name production \
+               --function-version ${{ steps.lambda_update.outputs.version }}
+
+      - name: Invalidate CloudFront cache
+        run: |
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?contains(Aliases.Items, '${{ env.API_GATEWAY_NAME }}.execute-api.${{ env.AWS_REGION }}.amazonaws.com')].Id" \
+            --output text)
+          aws cloudfront create-invalidation \
+            --distribution-id $DISTRIBUTION_ID \
+            --paths "/*"
+
+      - name: Clean up old versions
+        run: |
+          chmod +x ./scripts/cleanup-old-versions.sh
+          ./scripts/cleanup-old-versions.sh
+
+      - name: Create Git tag and release
+        id: release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ steps.lambda_update.outputs.version }}-${{ env.ENVIRONMENT }}
+          release_name: Release v${{ steps.lambda_update.outputs.version }} (${{ env.ENVIRONMENT }})
+          body: |
+            **Commit:** ${{ steps.commit.outputs.sha_short }}
+            **Message:** ${{ steps.commit.outputs.commit_message }}
+            **Environment:** ${{ env.ENVIRONMENT }}
+          draft: false
+          prerelease: ${{ env.ENVIRONMENT != 'prod' }}
+
+      - name: Notify deployment
+        run: |
+          echo "✅ New Lambda version ${{ steps.lambda_update.outputs.version }} deployed"
+          echo "🔗 Commit: ${{ steps.commit.outputs.sha_short }}"
+          echo "📝 Message: ${{ steps.commit.outputs.commit_message }}"
+          echo "🏷️ Tag: ${{ steps.release.outputs.tag_name }}"
+          echo "🚀 Release: ${{ steps.release.outputs.html_url }}"
