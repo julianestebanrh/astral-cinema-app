@@ -86,48 +86,115 @@ Este proyecto incluye la configuración de infraestructura con **Terraform**, sc
 
 
 ```
-.
-├── .github/
-│   └── workflows/
-│       ├── deploy.yml                   # Workflow para el despliegue de la aplicación
-│       ├── rollback.yml                 # Workflow para revertir a una versión anterior
-│       └── code-quality-scanning.yml    # Workflow para analisis, covertura y calidad
-├── scripts/
-│   ├── cleanup-old-versions.sh          # Script para eliminar versiones antiguas de Lambda y S3
-│   └── rollback.sh                      # Script para revertir a una versión anterior
-├── terraform/
-│   ├── app/
-│   │   ├── environments/
-│   │   │   ├── dev/
-│   │   │   │   └── terraform.tfvars    # Variables de entorno `dev`
-│   │   │   ├── prod/
-│   │   │   │   └── terraform.tfvars    # Variables de entorno `prod`
-│   │   │   └── staging/
-│   │   │       └── terraform.tfvars    # Variables de entorno `staging`
-│   │   │
-│   │   ├── api_gateway.tf              # Configuración del API Gateway
-│   │   ├── cloudfront.tf               # Configuración de CloudFront
-│   │   ├── lambda.tf                   # Configuración de la función Lambda
-│   │   ├── outputs.tf                  # Salidas de la infraestructura
-│   │   ├── policy.tf                   # Configuración de IAM Policy
-│   │   ├── providers.tf                # Configuración del provider
-│   │   ├── s3.tf                       # Configuración del bucket de S3
-│   │   ├── variables.tf                # Variables utilizadas en la configuración
-│   │   └── waf.tf                      # Configuración de WAF para restringir el acceso
-│   └── iam/
-│       ├── environments/
-│       │   ├── dev/
-│       │   │   └── terraform.tfvars    # Variables de entorno `dev`
-│       │   ├── prod/
-│       │   │   └── terraform.tfvars    # Variables de entorno `prod`
-│       │   └── staging/
-│       │       └── terraform.tfvars    # Variables de entorno `staging`
-│       ├── main.tf
-│       ├── providers.tf
-│       └── variables.tf 
-├── .output/                         # Carpeta con los archivos generados durante el build
-├── README.md                        # Documentación del proyecto
-└── .gitignore                       # Archivo para ignorar archivos en Git
+├─── .github
+│   └─── workflows
+│       ├─── code-quality-scanning.yml
+│       ├─── deploy.yml
+│       └─── rollback.yml
+├─── .husky
+│   └─── pre-commit
+├─── assets
+│   └─── css
+│       └─── tailwind.css
+├─── modules
+│   ├─── billboard
+│   │   ├─── components
+│   │   │   └─── BillboardHero
+│   │   │       ├─── index.css
+│   │   │       ├─── index.test.ts
+│   │   │       └─── index.vue
+│   │   ├─── pages
+│   │   │   └─── IndexPage
+│   │   │       ├─── index.test.ts
+│   │   │       └─── index.vue
+│   │   └─── types
+│   │       └─── billboard.ts
+│   ├─── common
+│   │   └─── components
+│   │       ├─── AnimatedNumber
+│   │       │   ├─── index.test.ts
+│   │       │   └─── index.vue
+│   │       └─── StarsBadge
+│   │           ├─── index.test.ts
+│   │           └─── index.vue
+│   └─── movies
+│       ├─── components
+│       │   └─── MovieCover
+│       │       ├─── index.css
+│       │       ├─── index.test.ts
+│       │       └─── index.vue
+│       └─── types
+│           └─── movies.ts
+├─── pages
+│   └─── index.vue
+├─── public
+│   ├─── favicon.ico
+│   └─── robots.txt
+├─── scripts
+│   ├─── cleanup-old-versions.sh
+│   └─── rollback.sh
+├─── server
+│   ├─── api
+│   │   └─── billboards
+│   │       ├─── __mocks__
+│   │       │   ├─── genres-response-mock.ts
+│   │       │   ├─── now-playing-response-mock.ts
+│   │       │   └─── tmdb-base-mocks.ts
+│   │       ├─── __tests__
+│   │       │   └─── index.get.test.ts
+│   │       └─── index.get.ts
+│   ├─── types
+│   │   ├─── billboard
+│   │   │   ├─── entities.ts
+│   │   │   └─── index.ts
+│   │   └─── tmdb.ts
+│   └─── tsconfig.json
+├─── terraform
+│   ├─── app
+│   │   ├─── environments
+│   │   │   ├─── dev
+│   │   │   │   └─── terraform.tfvars
+│   │   │   ├─── prod
+│   │   │   │   └─── terraform.tfvars
+│   │   │   └─── staging
+│   │   │       └─── terraform.tfvars
+│   │   ├─── api_gateway.tf
+│   │   ├─── cloudfront.tf
+│   │   ├─── lambda-server.zip
+│   │   ├─── lambda.tf
+│   │   ├─── outputs.tf
+│   │   ├─── policy.tf
+│   │   ├─── providers.tf
+│   │   ├─── s3.tf
+│   │   ├─── variables.tf
+│   │   └─── waf.tf
+│   └─── iam
+│       ├─── environments
+│       │   ├─── dev
+│       │   │   └─── terraform.tfvars
+│       │   ├─── prod
+│       │   │   └─── terraform.tfvars
+│       │   └─── staging
+│       │       └─── terraform.tfvars
+│       ├─── main.tf
+│       ├─── providers.tf
+│       └─── variables.tf
+├─── types
+│   └─── shims-heroicons.d.ts
+├─── .env
+├─── .gitignore
+├─── eslint.config.mjs
+├─── nuxt.config.ts
+├─── package.json
+├─── README.md
+├─── sonar-project.properties
+├─── tailwind.config.ts
+├─── tree.md
+├─── tree_markdown.ps1
+├─── tsconfig.json
+├─── vitest.config.ts
+├─── vitest.setup.ts
+└─── yarn.lock
 ```
 
 
