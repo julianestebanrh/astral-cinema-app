@@ -32,6 +32,9 @@ describe('Billboard Components', () => {
     describe('mount', () => {
       it('should render correctly', () => {
         expect(wrapper.vm).toBeDefined();
+
+        expect(wrapper.findComponent({ name: 'AnimatedBackground' }).exists()).toBe(true);
+        expect(wrapper.findComponent({ name: 'MoviesCarousel' }).exists()).toBe(true);
       });
     });
 

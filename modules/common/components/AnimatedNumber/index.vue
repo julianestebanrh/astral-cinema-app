@@ -18,7 +18,7 @@ const numberWithLeadingZeros = computed(() => {
 <template>
   <div class="overflow-hidden relative flex">
     <Transition name="scroll">
-      <span :key="numberWithLeadingZeros" class="inline-block text-8xl font-light">{{
+      <span :key="numberWithLeadingZeros" class="inline-block font-light">{{
         numberWithLeadingZeros
       }}</span>
     </Transition>
