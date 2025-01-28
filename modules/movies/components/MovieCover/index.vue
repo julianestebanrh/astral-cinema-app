@@ -9,7 +9,10 @@ defineProps<IProps>();
 
 <template>
   <div class="relative shadow-md overflow-hidden">
-    <img class="movie-cover-image w-full object-cover" :src="imageUrl" :alt="title" />
+    <img
+      class="movie-cover-image w-full object-cover select-none pointer-events-none"
+      :src="imageUrl"
+      :alt="title" />
 
     <h5 class="text-white absolute">{{ title }}</h5>
   </div>
