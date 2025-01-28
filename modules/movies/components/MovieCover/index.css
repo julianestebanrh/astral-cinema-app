@@ -1,8 +1,23 @@
-.movie-cover-image {
-  transition: transform 0.4s ease-in-out;
-  transform: scale(1);
+.movie-cover {
+  .movie-cover__image-container {
+    .movie-cover__image {
+      transition: transform .4s ease-in-out;
+      transform: scale(1);
+    }
+
+    .movie-cover__title {
+      transition: text-shadow .4s ease;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0) ;
+    }
+  }
 
   &:hover {
-    transform: scale(1.1);
+    .movie-cover__image {
+      transform: scale(1.1);
+    }
+
+    .movie-cover__title {
+      text-shadow: 0 0 10px rgba(255, 255, 255, .5);
+    }
   }
 }

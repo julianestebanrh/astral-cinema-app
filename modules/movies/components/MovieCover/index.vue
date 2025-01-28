@@ -8,13 +8,15 @@ defineProps<IProps>();
 </script>
 
 <template>
-  <div class="relative shadow-md overflow-hidden">
-    <img
-      class="movie-cover-image w-full object-cover select-none pointer-events-none"
-      :src="imageUrl"
-      :alt="title" />
+  <div class="movie-cover relative">
+    <div class="movie-cover__image-container shadow-md overflow-hidden">
+      <img
+        class="movie-cover__image w-full object-cover select-none pointer-events-none"
+        :src="imageUrl"
+        :alt="title" />
+    </div>
 
-    <h5 class="text-white absolute">{{ title }}</h5>
+    <h5 class="movie-cover__title text-white w-full text-center pointer-events-none mt-4">{{ title }}</h5>
   </div>
 </template>
 
