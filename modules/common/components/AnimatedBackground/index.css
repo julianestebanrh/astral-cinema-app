@@ -1,0 +1,29 @@
+.animated-background {
+  .animated-background__overlay {
+    background-image: linear-gradient(
+      rgba(0, 0, 0, 0) 40%,
+      rgba(0, 0, 0, 0.7) 70%
+    );
+  }
+}
+
+.fade-and-scale-enter-from,
+.fade-and-scale-leave-to {
+  opacity: 0;
+  filter: blur(10px);
+  transform: scale(1.2) rotate(-2deg);
+}
+
+.fade-and-scale-enter-active,
+.fade-and-scale-leave-active {
+  transition-timing-function: ease-in-out;
+  transition-duration: .8s;
+  transition-property: opacity, transform, filter;
+}
+
+.fade-and-scale-enter-to,
+.fade-and-scale-leave-from {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  filter: blur(0);
+}
