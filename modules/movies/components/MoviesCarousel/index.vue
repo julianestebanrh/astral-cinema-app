@@ -14,15 +14,16 @@ const emit = defineEmits(['movie-click']);
 
 const onClick = (index: number, evt: MouseEvent) => {
   if (trackRef.value) {
-    const trackClientWidth = trackRef.value.clientWidth;
-    const currentScrollLeft = trackRef.value.scrollLeft;
+    const trackWidth = trackRef.value.getBoundingClientRect().width
+    const clickedEl = evt.target as HTMLElement;
+    const parent = clickedEl.parentElement as HTMLLIElement;
+    const parentScrollPosition = parent.offsetLeft;
+    const parentWidth = parent.getBoundingClientRect().width;
 
-    const clickedElement = (evt.target as HTMLElement).getBoundingClientRect()
-    const clickedElementCenter = clickedElement.left + clickedElement.width / 2;
-    const distanceToMove = clickedElementCenter - trackClientWidth;
+    const distanceToMove = parentScrollPosition - (trackWidth / 2) + (parentWidth / 2);
 
     trackRef.value.scrollTo({
-      left: currentScrollLeft + distanceToMove,
+      left: distanceToMove,
       behavior: 'smooth',
     })
   }
@@ -34,7 +35,7 @@ const onClick = (index: number, evt: MouseEvent) => {
 <template>
   <ul
     ref="movies-carousel-track"
-    class="movie-covers-list flex gap-8 overflow-x-scroll">
+    class="movie-covers-list flex gap-8 overflow-x-scroll relative">
     <li v-for="(movie, index) in movies" :key="movie.id">
       <MovieCover
         class="w-[250px] md:w-[300px]"
